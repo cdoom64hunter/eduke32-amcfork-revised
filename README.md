@@ -1,48 +1,56 @@
-# Fork of eduke32 for the AMC TC v4.0
+# Fork of EDuke32 for the AMC TC
 
-This repository is a minor fork of https://voidpoint.io/terminx/eduke32 to ensure compatibility of the TC with current versions of the engine.
-It supersedes the previous repository at https://github.com/cdoom64hunter/eduke32-amcfork. 
+This repository is a fork of the official eduke32 repository: https://voidpoint.io/terminx/eduke32 
 
-Its primary purpose is to raise the sound limit, alter hardcoded Duke 3D engine features to allow for greater flexibility in development 
-of the TC, and to work around incompatibilities that may have been introduced by particular engine changes, such as actor clipping, which
-may be difficult to resolve without adversely affecting other games based on the Build engine.
+It differs from the above by extending limits and altering hardcoded Duke3D features, specifically for the AMC TC. 
 
-Specific changes can be viewed from the commit logs created by the maintainers of this repository.
+- The AMC TC can be found at: https://www.moddb.com/games/the-amc-tc
 
-## Installing and Compiling from Source
+## Description
+The primary purpose of this fork is to raise limits and alter hardcoded Duke 3D engine features to allow for greater flexibility 
+in the development of the AMC TC, and to work around some bugs with legacy features which are difficult to resolve in CON code.
 
-**Required packages:**
-* Basic dev environment (GCC >= 4.8, GNU make, etc)
-* SDL2 >= 2.0 (SDL >= 1.2.10 also supported with SDL_TARGET=1)
-* SDL2_mixer >= 2.0 (SDL_mixer >= 1.2.7 also supported with SDL_TARGET=1)
-* NASM (highly recommended for i686/32-bit compilation to speed up 8-bit classic software renderer)
-* libGL and libGLU (required for OpenGL renderers)
-* libgtk+ >= 2.8.0 (required for the startup window)
-* libvorbis >= 1.1.2 (libvorbisfile, libogg)
-* libvpx >= 0.9.0
+The changes are kept sparse to make merging with mainline eduke32 as smooth as possible.
 
-**For further instructions, refer to:**
-* Linux: https://wiki.eduke32.com/wiki/Building_EDuke32_on_Linux
-* Windows: https://wiki.eduke32.com/wiki/Building_EDuke32_on_Windows
-* MacOS: https://wiki.eduke32.com/wiki/Building_EDuke32_on_macOS
+Sidenote: The AMC TC makes extensive use of eduke32 modding features and will hence not be made compatible with Raze or GDX.
 
-To compile, simply execute the following command in the base folder:
+## Compiling from Source:
 
-```make``` (optionally: ```make -j4``` to speed up compilation)
+__Required packages:__
+    
+     * Basic dev environment (GCC >= 4.8, GNU make, etc)
+     * SDL2 >= 2.0 (SDL >= 1.2.10 also supported with SDL_TARGET=1)
+     * SDL2_mixer >= 2.0 (SDL_mixer >= 1.2.7 also supported with SDL_TARGET=1)
+     * NASM (highly recommended for i686/32-bit compilation to speed up 8-bit classic software renderer)
+     * libGL and libGLU (required for OpenGL renderers)
+     * libgtk+ >= 2.8.0 (required for the startup window)
+     * libvorbis >= 1.1.2 (libvorbisfile, libogg)
+     * libvpx >= 0.9.0
 
-By default, game autodetection is disabled, and the binary expects the amctc.grpinfo file, as well as the game data to be present in the same folder as itself.
-If you intend to experiment with the exe for non-AMC TC purposes, and restore compatibility with other Duke3D-based games, compile with the following parameter:
+To compile, simply run the command `make -j4` in the base folder.
 
-```make NO_AMCTC=1```
+Autodetection for Duke 3D is disabled, and the binary expects the `amctc.grpinfo` file, as well as the game data to be present in the same folder.
 
-## License
+If you intend to experiment with the exe for non-AMC TC purposes, compile with the following parameter:
 
-eduke32 is licensed under GPL v2.0. The Build engine base is licensed under the BUILD license. 
-Credits and copyright goes to their respective authors. The AMC team thanks the developers of eduke32
-for their continued assistance and support over the past years.
+`make NO_AMCTC=1`
 
-Should any significant additions be made to the codebase, then those shall be licensed under the BSD license.
+__Additional build instructions can be found here:__
 
-**THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+* Linux: <https://wiki.eduke32.com/wiki/Building_EDuke32_on_Linux>
+* Windows: <https://wiki.eduke32.com/wiki/Building_EDuke32_on_Windows>
+* MacOS: <https://wiki.eduke32.com/wiki/Building_EDuke32_on_macOS>
+
+## Credits and Licenses
+
+Fork created by Dino Bollinger.
+
+* eduke32 is developed and maintained by Voidpoint LLC and is licensed under the GPL v2.0, see `gpl-2.0.txt`.  
+
+* The Build Engine was created by Ken Silverman and is licensed under the BUILD license. See `source/build/buildlic.txt`. 
+
+The AMC Team thanks the developers of eduke32 for their continued assistance and support over the past years.
+
+**THIS SOFTWARE IS PROVIDED ''AS IS'' AND WITHOUT ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.**
