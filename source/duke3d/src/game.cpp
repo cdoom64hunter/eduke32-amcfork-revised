@@ -6492,6 +6492,7 @@ int app_main(int argc, char const* const* argv)
 #endif
     CONFIG_ReadSetup();
 
+#if 0
 #if defined(_WIN32) && !defined (EDUKE32_STANDALONE)
 
 //    initprintf("build %d\n",(uint8_t)Batoi(BUILDDATE));
@@ -6533,6 +6534,7 @@ int app_main(int argc, char const* const* argv)
             else initprintf("update: failed to check for updates\n");
         }
     }
+#endif
 #endif
 
 #ifdef EDUKE32_STANDALONE
