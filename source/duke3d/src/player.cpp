@@ -4782,8 +4782,8 @@ static void P_DoJetpack(int const playerNum, int const playerBits, int const pla
     if (pPlayer->pos.z > (floorZ - (Zdiff << 8)))
         pPlayer->pos.z += ((floorZ - (Zdiff << 8)) - pPlayer->pos.z) >> 1;
 
-    if (pPlayer->pos.z < (actor[pPlayer->i].ceilingz + (18 << 8)))
-        pPlayer->pos.z = actor[pPlayer->i].ceilingz + (18 << 8);
+    if (pPlayer->pos.z < (actor[pPlayer->i].ceilingz + ZOFFSET7))
+        pPlayer->pos.z = actor[pPlayer->i].ceilingz + ZOFFSET7;
 }
 
 static void P_Dead(int const playerNum, int const sectorLotag, int const floorZ, int const ceilZ)
