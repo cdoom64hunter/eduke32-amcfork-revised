@@ -5805,6 +5805,7 @@ repeatcase:
 
         case CON_DEFINESOUND:
         case CON_DEFINESOUNDV:
+        {
             g_scriptPtr--;
             C_GetNextValue(LABEL_DEFINE);
 
@@ -5905,7 +5906,6 @@ repeatcase:
                 G_ProcessDynamicSoundMapping(label + (j << 6), k);
             continue;
         }
-
         case CON_ENDEVENT:
 
             if (EDUKE32_PREDICT_FALSE(!g_scriptEventOffset))
