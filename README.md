@@ -33,7 +33,7 @@ Autodetection for Duke 3D is disabled, and the binary expects the `amctc.grpinfo
 
 If you intend to experiment with the exe for non-AMC TC purposes, compile with the following parameter:
 
-`make NO_AMCTC=1`
+`make AMCTC=0`
 
 __Additional build instructions can be found here:__
 
