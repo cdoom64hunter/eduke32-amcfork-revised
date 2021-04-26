@@ -192,7 +192,7 @@ static void A_HitscanProjTrail(const vec3_t *startPos, const vec3_t *endPos, int
 
 int32_t A_GetHitscanRange(int spriteNum)
 {
-    int const zOffset = (PN(spriteNum) == APLAYER) ? PHEIGHT : 0;
+    int const zOffset = (PN(spriteNum) == APLAYER) ? g_player[P_Get(spriteNum)].ps->spritezoffset : 0;
     hitdata_t hitData;
 
     SZ(spriteNum) -= zOffset;
@@ -864,7 +864,7 @@ static int A_ShootCustom(int const spriteNum, int const projecTile, int shootAng
 
         pSprite->x += x;
         pSprite->y += y;
-        G_AddGameLight(0, spriteNum, PHEIGHT, 8192, pProj->flashcolor, PR_LIGHT_PRIO_MAX_GAME);
+        G_AddGameLight(0, spriteNum, pPlayer->spritezoffset, 8192, pProj->flashcolor, PR_LIGHT_PRIO_MAX_GAME);
         practor[spriteNum].lightcount = 2;
         pSprite->x -= x;
         pSprite->y -= y;
@@ -2071,7 +2071,7 @@ static void P_FireWeapon(int playerNum)
 
         s->x += x;
         s->y += y;
-        G_AddGameLight(0, pPlayer->i, PHEIGHT, 8192, PWEAPON(playerNum, pPlayer->curr_weapon, FlashColor),
+        G_AddGameLight(0, pPlayer->i, pPlayer->spritezoffset, 8192, PWEAPON(playerNum, pPlayer->curr_weapon, FlashColor),
                        PR_LIGHT_PRIO_MAX_GAME);
         practor[pPlayer->i].lightcount = 2;
         s->x -= x;
@@ -4144,7 +4144,7 @@ static void P_ProcessWeapon(int playerNum)
             pSprite->x += glowXOffset;
             pSprite->y += glowYOffset;
 
-            G_AddGameLight(0, pPlayer->i, PHEIGHT, max(glowRange, 0),
+            G_AddGameLight(0, pPlayer->i, pPlayer->spritezoffset, max(glowRange, 0),
                            PWEAPON(playerNum, pPlayer->curr_weapon, FlashColor), PR_LIGHT_PRIO_HIGH_GAME);
 
             practor[pPlayer->i].lightcount = 2;
@@ -4815,7 +4815,7 @@ static void P_Dead(int const playerNum, int const sectorLotag, int const floorZ,
     {
         if (pPlayer->on_warping_sector == 0)
         {
-            if (klabs(pPlayer->pos.z-floorZ) >(PHEIGHT>>1))
+            if (klabs(pPlayer->pos.z-floorZ) >(pPlayer->spritezoffset>>1))
                 pPlayer->pos.z += 348;
         }
         else
@@ -4953,7 +4953,7 @@ void P_ProcessInput(int playerNum)
     int const trueFloorZ    = pPlayer->truefz;
     int const trueFloorDist = klabs(pPlayer->pos.z - trueFloorZ);
 
-    if ((lowZhit & 49152) == 16384 && sectorLotag == 1 && trueFloorDist > PHEIGHT + ZOFFSET2)
+    if ((lowZhit & 49152) == 16384 && sectorLotag == 1 && trueFloorDist > pPlayer->spritezoffset + ZOFFSET2)
         sectorLotag = 0;
 
     if ((highZhit & 49152) == 49152)
@@ -5104,7 +5104,7 @@ void P_ProcessInput(int playerNum)
 
     int                  velocityModifier = TICSPERFRAME;
     const uint8_t *const weaponFrame      = &pPlayer->kickback_pic;
-    int                  floorZOffset     = 40;
+    int                  floorZOffset     = pPlayer->floorzoffset;
     int const            playerShrunk     = (pSprite->yrepeat < 32);
     vec3_t const         backupPos        = pPlayer->opos;
 
@@ -5153,16 +5153,16 @@ void P_ProcessInput(int playerNum)
 
         if (sectorLotag == ST_1_ABOVE_WATER && pPlayer->spritebridge == 0)
         {
-            floorZOffset = 12;
+            floorZOffset = pPlayer->shrunkzoffset;
 
             if (!playerShrunk)
             {
-                floorZOffset      = 34;
+                floorZOffset      = pPlayer->maxwaterzoffset;
                 pPlayer->pycount += 32;
                 pPlayer->pycount &= 2047;
                 pPlayer->pyoff    = sintable[pPlayer->pycount] >> 6;
 
-                if (trueFloorDist <= PHEIGHT)
+                if (trueFloorDist <= pPlayer->spritezoffset)
                 {
                     if (pPlayer->on_ground == 1)
                     {
@@ -5217,12 +5217,12 @@ void P_ProcessInput(int playerNum)
             }
         }
 
-        if (pPlayer->pos.z < (floorZ-(floorZOffset<<8)))  //falling
+        if (pPlayer->pos.z < (floorZ-floorZOffset))  //falling
         {
             // this is what keeps you glued to the ground when you're running down slopes
             if ((!TEST_SYNC_KEY(playerBits, SK_JUMP) && !(TEST_SYNC_KEY(playerBits, SK_CROUCH))) && pPlayer->on_ground &&
-                (sector[pPlayer->cursectnum].floorstat & 2) && pPlayer->pos.z >= (floorZ - (floorZOffset << 8) - ZOFFSET2))
-                pPlayer->pos.z = floorZ - (floorZOffset << 8);
+                (sector[pPlayer->cursectnum].floorstat & 2) && pPlayer->pos.z >= (floorZ - floorZOffset - ZOFFSET2))
+                pPlayer->pos.z = floorZ - floorZOffset;
             else
             {
                 pPlayer->vel.z += pPlayer->gravity;  // (TICSPERFRAME<<6);
@@ -5241,7 +5241,7 @@ void P_ProcessInput(int playerNum)
                     }
                 }
 
-                if ((pPlayer->pos.z + pPlayer->vel.z) >= (floorZ - (floorZOffset << 8)) && pPlayer->cursectnum >= 0)  // hit the ground
+                if ((pPlayer->pos.z + pPlayer->vel.z) >= (floorZ - floorZOffset) && pPlayer->cursectnum >= 0)  // hit the ground
                 {
                     if (sector[pPlayer->cursectnum].lotag != ST_1_ABOVE_WATER)
                     {
@@ -5295,10 +5295,10 @@ void P_ProcessInput(int playerNum)
 
             pPlayer->on_ground = 1;
 
-            if (floorZOffset==40)
+            if (floorZOffset==pPlayer->floorzoffset)
             {
                 //Smooth on the ground
-                int Zdiff = ((floorZ - (floorZOffset << 8)) - pPlayer->pos.z) >> 1;
+                int Zdiff = ((floorZ - floorZOffset) - pPlayer->pos.z) >> 1;
 
                 if (klabs(Zdiff) < 256)
                     Zdiff = 0;
@@ -5312,11 +5312,11 @@ void P_ProcessInput(int playerNum)
             }
             else if (pPlayer->jumping_counter == 0)
             {
-                pPlayer->pos.z += ((floorZ - (floorZOffset << 7)) - pPlayer->pos.z) >> 1;  // Smooth on the water
+                pPlayer->pos.z += ((floorZ - (floorZOffset >> 1)) - pPlayer->pos.z) >> 1;  // Smooth on the water
 
-                if (pPlayer->on_warping_sector == 0 && pPlayer->pos.z > floorZ - ZOFFSET2)
+                if (pPlayer->on_warping_sector == 0 && pPlayer->pos.z > floorZ - pPlayer->minwaterzoffset)
                 {
-                    pPlayer->pos.z = floorZ - ZOFFSET2;
+                    pPlayer->pos.z = floorZ - pPlayer->minwaterzoffset;
                     pPlayer->vel.z >>= 1;
                 }
             }
@@ -5328,7 +5328,7 @@ void P_ProcessInput(int playerNum)
                 {
                     if (pPlayer->jumping_toggle == 0)
                     {
-                        pPlayer->pos.z += PCROUCHINCREMENT;
+                        pPlayer->pos.z += pPlayer->crouchzincrement;
                         pPlayer->crack_time = PCRACKTIME;
                     }
                 }
@@ -5344,7 +5344,7 @@ void P_ProcessInput(int playerNum)
 
                 getzrange(&pPlayer->pos, pPlayer->cursectnum, &ceilZ2, &dummy, &floorZ2, &dummy2, getZRangeClipDist, CLIPMASK0);
 
-                if (klabs(floorZ2-ceilZ2) > PTOTALHEIGHT)
+                if (klabs(floorZ2-ceilZ2) > pPlayer->spritezoffset + ZOFFSET3)
                 {
                     if (VM_OnEvent(EVENT_JUMP,pPlayer->i,playerNum) == 0)
                     {
@@ -5431,7 +5431,7 @@ void P_ProcessInput(int playerNum)
             }
         }
 #endif
-        if (pPlayer->on_ground && trueFloorDist <= PHEIGHT+ZOFFSET2 && P_CheckFloorDamage(pPlayer, floorPicnum))
+        if (pPlayer->on_ground && trueFloorDist <= pPlayer->spritezoffset+ZOFFSET2 && P_CheckFloorDamage(pPlayer, floorPicnum))
         {
             P_DoQuote(QUOTE_BOOTS_ON, pPlayer);
             pPlayer->inv_amount[GET_BOOTS] -= 2;
@@ -5463,7 +5463,7 @@ void P_ProcessInput(int playerNum)
         {
             int const checkWalkSound = sintable[pPlayer->bobcounter & 2047] >> 12;
 
-            if (trueFloorDist < PHEIGHT + ZOFFSET3)
+            if (trueFloorDist < pPlayer->spritezoffset + ZOFFSET3)
             {
                 if (checkWalkSound == 1 || checkWalkSound == 3)
                 {
@@ -5514,14 +5514,14 @@ void P_ProcessInput(int playerNum)
         int playerSpeedReduction = 0;
 
         if (sectorLotag == ST_2_UNDERWATER)
-            playerSpeedReduction = PWATERSPEEDMODIFIER;
+            playerSpeedReduction = pPlayer->waterspeedmodifier;
         else if (((pPlayer->on_ground && TEST_SYNC_KEY(playerBits, SK_CROUCH))
                   || (*weaponFrame > 10 && PWEAPON(playerNum, pPlayer->curr_weapon, WorksLike) == KNEE_WEAPON)))
-            playerSpeedReduction = PCROUCHSPEEDMODIFIER;
+            playerSpeedReduction = pPlayer->crouchspeedmodifier;
         else if (pPlayer->on_ground && !pPlayer->jumping_toggle && !TEST_SYNC_KEY(playerBits, SK_CROUCH)
                  && (klabs(pPlayer->truefz - pPlayer->truecz) - (PMINHEIGHT << 1)) < stepHeight)
         {
-            playerSpeedReduction = PCROUCHSPEEDMODIFIER;
+            playerSpeedReduction = pPlayer->crouchspeedmodifier;
 //            pPlayer->pos.z += PCROUCHINCREMENT;
         }
 
@@ -5612,9 +5612,9 @@ HORIZONLY:;
 
     if (pPlayer->cursectnum >= 0)
     {
-        pPlayer->pos.z += PHEIGHT;
+        pPlayer->pos.z += pPlayer->spritezoffset;
         sprite[pPlayer->i].pos = pPlayer->pos;
-        pPlayer->pos.z -= PHEIGHT;
+        pPlayer->pos.z -= pPlayer->spritezoffset;
 
         changespritesect(pPlayer->i, pPlayer->cursectnum);
     }
@@ -5634,7 +5634,7 @@ HORIZONLY:;
     }
 
 #ifndef EDUKE32_STANDALONE
-    if (!FURY && (pPlayer->cursectnum >= 0 && trueFloorDist < PHEIGHT && pPlayer->on_ground && sectorLotag != ST_1_ABOVE_WATER &&
+    if (!FURY && (pPlayer->cursectnum >= 0 && trueFloorDist < pPlayer->spritezoffset && pPlayer->on_ground && sectorLotag != ST_1_ABOVE_WATER &&
          playerShrunk == 0 && sector[pPlayer->cursectnum].lotag == ST_1_ABOVE_WATER) && (!A_CheckSoundPlaying(pPlayer->i, DUKE_ONWATER)))
             A_PlaySound(DUKE_ONWATER, pPlayer->i);
 #endif
@@ -5649,7 +5649,7 @@ RECHECK:
         int const  pushResult = pushmove(&pPlayer->pos, &pPlayer->cursectnum, pPlayer->clipdist - 1, (4L<<8), (4L<<8), CLIPMASK0, !mashedPotato);
         bool const squishPlayer = pushResult < 0;
 
-        if (squishPlayer || klabs(actor[pPlayer->i].floorz-actor[pPlayer->i].ceilingz) < PTOTALHEIGHT)
+        if (squishPlayer || klabs(actor[pPlayer->i].floorz-actor[pPlayer->i].ceilingz) < pPlayer->spritezoffset + ZOFFSET3)
         {
             if (!(sector[pSprite->sectnum].lotag & 0x8000u) &&
                 (isanunderoperator(sector[pSprite->sectnum].lotag) || isanearoperator(sector[pSprite->sectnum].lotag)))

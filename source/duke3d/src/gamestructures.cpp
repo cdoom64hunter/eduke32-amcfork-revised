@@ -549,7 +549,16 @@ memberlabel_t const PlayerLabels[] =
     MEMBER(g_player[0].ps, last_used_weapon,            PLAYER_LAST_USED_WEAPON),
     {                                "bsubweapon",      PLAYER_BSUBWEAPON, LABEL_HASPARM2, MAX_WEAPONS, -1 },
     MEMBER(g_player[0].ps, crouch_toggle,               PLAYER_CROUCH_TOGGLE),
+
     MEMBER(g_player[0].ps, gravity,                     PLAYER_GRAVITY),
+    MEMBER(g_player[0].ps, floorzoffset,                PLAYER_FLOORZOFFSET),
+    MEMBER(g_player[0].ps, spritezoffset,               PLAYER_SPRITEZOFFSET),
+    MEMBER(g_player[0].ps, minwaterzoffset,             PLAYER_MINWATERZOFFSET),
+    MEMBER(g_player[0].ps, maxwaterzoffset,             PLAYER_MAXWATERZOFFSET),
+    MEMBER(g_player[0].ps, shrunkzoffset,               PLAYER_SHRUNKZOFFSET),
+    MEMBER(g_player[0].ps, crouchzincrement,            PLAYER_CROUCHZINCREMENT),
+    MEMBER(g_player[0].ps, crouchspeedmodifier,         PLAYER_CROUCHSPEEDMODIFIER),
+    MEMBER(g_player[0].ps, waterspeedmodifier,          PLAYER_WATERSPEEDMODIFIER),
 };
 
 int32_t __fastcall VM_GetPlayer(int const playerNum, int32_t labelNum, int const lParm2)

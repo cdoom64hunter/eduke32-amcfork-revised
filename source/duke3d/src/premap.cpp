@@ -665,6 +665,23 @@ static inline void P_ResetTintFade(DukePlayer_t *const pPlayer)
     pPlayer->pals.f = 0;
 }
 
+void P_ResetExtents(DukePlayer_t *const pPlayer)
+{
+    pPlayer->autostep            = 20 << 8;
+    pPlayer->autostep_sbw        = 4 << 8;
+    pPlayer->clipdist            = 164;
+    pPlayer->crouchspeedmodifier = 8192;
+    pPlayer->crouchzincrement    = 2048 + 768;
+    pPlayer->floorzoffset        = 40 << 8;
+    pPlayer->gravity             = g_spriteGravity + 80;
+    pPlayer->maxwaterzoffset     = 34 << 8;
+    pPlayer->minwaterzoffset     = 16 << 8;
+    pPlayer->runspeed            = g_playerFriction;
+    pPlayer->shrunkzoffset       = 12 << 8;
+    pPlayer->spritezoffset       = 38 << 8/*PHEIGHT*/;
+    pPlayer->waterspeedmodifier  = 5120;
+}
+
 void P_ResetMultiPlayer(int playerNum)
 {
     auto &p = *g_player[playerNum].ps;
@@ -676,7 +693,7 @@ void P_ResetMultiPlayer(int playerNum)
 
     vec3_t tmpvect = p.pos;
 
-    tmpvect.z += PHEIGHT;
+    tmpvect.z += p.spritezoffset;
 
     P_MoveToRandomSpawnPoint(playerNum);
 
@@ -705,13 +722,11 @@ void P_ResetMultiPlayer(int playerNum)
     p.frag_ps         = playerNum;
     p.fta             = 0;
     p.ftq             = 0;
-    p.gravity         = g_spriteGravity+80;
     p.on_crane        = -1;
     p.opyoff          = 0;
     p.q16horiz        = F16(100);
     p.q16horizoff     = 0;
     p.rotscrnang      = 0;
-    p.runspeed        = g_playerFriction;
     p.vel             = { 0, 0, 0 };
     p.wackedbyactor   = -1;
     p.wantweaponfire  = -1;
@@ -748,12 +763,9 @@ void P_ResetPlayer(int playerNum)
     p.access_spritenum   = -1;
     p.actorsqu           = -1;
     p.airleft            = 15 * GAMETICSPERSEC;
-    p.autostep           = (20L << 8);
-    p.autostep_sbw       = (4L << 8);
     p.bobcounter         = 0;
     p.buttonpalette      = 0;
     p.cheat_phase        = 0;
-    p.clipdist           = 164;
     p.crack_time         = 0;
     p.dead_flag          = 0;
     p.dummyplayersprite  = -1;
@@ -770,7 +782,6 @@ void P_ResetPlayer(int playerNum)
     p.fta                = 0;
     p.ftq                = 0;
     p.got_access         = ((g_netServer || ud.multimode > 1) && (g_gametypeFlags[ud.coop] & GAMETYPE_ACCESSATSTART)) ? 7 : 0;
-    p.gravity            = g_spriteGravity+80;
     p.hard_landing       = 0;
     p.hbomb_hold_delay   = 0;
     p.heat_on            = 0;
@@ -846,6 +857,7 @@ void P_ResetPlayer(int playerNum)
     thisPlayer.horizSkew        = 0;
     thisPlayer.horizAngleAdjust = 0;
 
+    P_ResetExtents(&p);
     P_UpdateScreenPal(&p);
     VM_OnEvent(EVENT_RESETPLAYER, p.i, playerNum);
 }
@@ -1512,7 +1524,6 @@ static void G_CollectSpawnPoints(int gameMode)
 
         if ((gameMode & MODE_EOL) != MODE_EOL || p.last_extra == 0)
         {
-            p.runspeed   = g_playerFriction;
             p.last_extra = p.max_player_health;
             s.extra      = p.max_player_health;
         }

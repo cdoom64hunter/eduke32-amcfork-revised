@@ -389,7 +389,12 @@ wallsfinished:
                 int spriteDist = dist(pSprite, pDamage);
                 
                 if (pDamage->picnum == APLAYER)
-                    spriteDist = FindDistance3D(pSprite->x - pDamage->x, pSprite->y - pDamage->y, pSprite->z - (pDamage->z - PHEIGHT));
+                {
+                    int const  playerNum = P_Get(damageSprite);
+                    auto const pPlayer   = g_player[playerNum].ps;
+
+                    spriteDist = FindDistance3D(pSprite->x - pDamage->x, pSprite->y - pDamage->y, pSprite->z - (pDamage->z - pPlayer->spritezoffset));
+                }
 
                 if (spriteDist < blastRadius)
                     A_RadiusDamageObject_Internal(spriteNum, damageSprite, blastRadius, spriteDist, randomZOffset, dmg1, dmg2, dmg3, dmg4);
@@ -1369,7 +1374,7 @@ ACTOR_STATIC void G_MovePlayers(void)
             {
                 pSprite->x              = pPlayer->opos.x;
                 pSprite->y              = pPlayer->opos.y;
-                pSprite->z              = pPlayer->opos.z + PHEIGHT;
+                pSprite->z              = pPlayer->opos.z + pPlayer->spritezoffset;
                 actor[spriteNum].bpos.z = pSprite->z;
                 pSprite->ang            = fix16_to_int(pPlayer->oq16ang);
 
@@ -3680,7 +3685,7 @@ static void P_FinishWaterChange(int const playerNum, DukePlayer_t * const pPlaye
     changespritesect(playerNum, newSector);
 
     vec3_t vect = pPlayer->pos;
-    vect.z += PHEIGHT;
+    vect.z += pPlayer->spritezoffset;
     setsprite(pPlayer->i, &vect);
 
     P_UpdateScreenPal(pPlayer);
@@ -3772,7 +3777,7 @@ ACTOR_STATIC void G_MoveTransports(void)
                                 }
 
                                 pPlayer->pos    = sprite[OW(spriteNum)].pos;
-                                pPlayer->pos.z -= PHEIGHT;
+                                pPlayer->pos.z -= pPlayer->spritezoffset;
                                 pPlayer->opos   = pPlayer->pos;
                                 pPlayer->bobpos = pPlayer->pos.vec2;
 
@@ -7770,9 +7775,9 @@ ACTOR_STATIC void G_MoveEffectors(void)   //STATNUM 3
                         pPlayer->opos.x = pPlayer->pos.x;
                         pPlayer->opos.y = pPlayer->pos.y;
 
-                        pPlayer->pos.z += PHEIGHT;
+                        pPlayer->pos.z += pPlayer->spritezoffset;
                         setsprite(pPlayer->i, &pPlayer->pos);
-                        pPlayer->pos.z -= PHEIGHT;
+                        pPlayer->pos.z -= pPlayer->spritezoffset;
                     }
                 }
 
@@ -7893,7 +7898,7 @@ ACTOR_STATIC void G_MoveEffectors(void)   //STATNUM 3
 
                 if (pPlayer->cursectnum == pSprite->sectnum && pPlayer->on_ground)
                 {
-                    if (klabs(pPlayer->pos.z - pPlayer->truefz) < PHEIGHT + (9 << 8))
+                    if (klabs(pPlayer->pos.z - pPlayer->truefz) < pPlayer->spritezoffset + ZOFFSET3)
                     {
                         pPlayer->fric.x += vect.x << 3;
                         pPlayer->fric.y += vect.y << 3;
