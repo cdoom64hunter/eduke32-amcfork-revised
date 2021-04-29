@@ -48,7 +48,10 @@ int G_SetInterpolation(int32_t *const posptr)
 
     for (bssize_t i = 0; i < g_interpolationCnt; ++i)
         if (curipos[i] == posptr)
+        {
+            oldipos[i] = *posptr;
             return 0;
+        }
 
     curipos[g_interpolationCnt] = posptr;
     oldipos[g_interpolationCnt] = *posptr;
@@ -7968,20 +7971,26 @@ ACTOR_STATIC void G_MoveEffectors(void)   //STATNUM 3
             l = (pSprite->xvel*sintable[(pSprite->ang+512)&2047])>>14;
             x = (pSprite->xvel*sintable[pSprite->ang&2047])>>14;
 
-            pSprite->shade++;
-            if (pSprite->shade > 7)
+            if (++pSprite->shade > 7)
             {
-                pSprite->x = pData[3];
-                pSprite->y = pData[4];
-                pSector->floorz -= ((pSprite->zvel*pSprite->shade)-pSprite->zvel);
+                pSector->floorz -= pSprite->zvel * pSprite->shade;
                 pSprite->shade = 0;
+
+                int oxvel = pSprite->xvel;
+                pSprite->xvel = -(pSprite->xvel<<3);
+                A_MoveSector(spriteNum);
+                Sect_SetInterpolation(pSprite->sectnum);
+                pSprite->xvel = oxvel;
             }
-            else
-                pSector->floorz += pSprite->zvel;
+
+            pSector->floorz += pSprite->zvel;
+            A_MoveSector(spriteNum);
+            setsprite(spriteNum,&pSprite->pos);
 
             for (SPRITES_OF_SECT_SAFE(pSprite->sectnum, j, nextj))
             {
-                if (sprite[j].statnum != STAT_EFFECTOR && sprite[j].statnum != STAT_PLAYER && sprite[j].statnum != STAT_PROJECTILE)
+                if (sprite[j].statnum != STAT_EFFECTOR && sprite[j].statnum != STAT_PLAYER && sprite[j].statnum != STAT_PROJECTILE
+                    && pSector->floorz - sprite[j].z <= ZOFFSET3)
                 {
                     actor[j].bpos.vec2 = sprite[j].pos.vec2;
 
@@ -7997,28 +8006,32 @@ ACTOR_STATIC void G_MoveEffectors(void)   //STATNUM 3
             {
                 auto const pPlayer = g_player[p].ps;
 
-                if (pSprite->sectnum == pPlayer->cursectnum && pPlayer->on_ground)
+                if (pSprite->sectnum == pPlayer->cursectnum)
                 {
-                    pPlayer->pos.x += l;
-                    pPlayer->pos.y += x;
-                    pPlayer->pos.z += pSprite->zvel;
-
                     updatesector(pPlayer->pos.x, pPlayer->pos.y, &pPlayer->cursectnum);
                     changespritesect(pPlayer->i, pPlayer->cursectnum);
 
-                    pPlayer->bobpos.x += l;
-                    pPlayer->bobpos.y += x;
+                    if (pSprite->sectnum == pPlayer->cursectnum && pPlayer->on_ground && pSector->floorz - pPlayer->pos.z <= PHEIGHT+ZOFFSET3)
+                    {
+                        pPlayer->pos.x += l;
+                        pPlayer->pos.y += x;
+                        pPlayer->pos.z += pSprite->zvel;
 
-                    if (g_netServer || numplayers > 1)
-                        pPlayer->opos.vec2 = pPlayer->pos.vec2;
+                        updatesector(pPlayer->pos.x, pPlayer->pos.y, &pPlayer->cursectnum);
+                        changespritesect(pPlayer->i, pPlayer->cursectnum);
 
-                    if (sprite[pPlayer->i].extra <= 0)
-                        sprite[pPlayer->i].pos.vec2 = pPlayer->pos.vec2;
+                        vec3_t vect = pPlayer->pos;
+                        vect.z += PHEIGHT;
+                        setsprite(pPlayer->i, &vect);
+
+                        pPlayer->bobpos.x += l;
+                        pPlayer->bobpos.y += x;
+
+                        if (sprite[pPlayer->i].extra <= 0)
+                            sprite[pPlayer->i].pos.vec2 = pPlayer->pos.vec2;
+                    }
                 }
             }
-
-            A_MoveSector(spriteNum);
-            setsprite(spriteNum,&pSprite->pos);
 
             break;
         }
