@@ -3296,22 +3296,22 @@ void P_GetInput(int const playerNum)
         float horizAngle;
         int const movementLocked = P_CheckLockedMovement(playerNum);
 
+        input.q16avel = VM_OnEventWithReturn(EVENT_PLAYERAVEL,g_player[playerNum].ps->i,playerNum,input.q16avel);
         if (!(movementLocked & IL_NOANGLE))
             pPlayer->q16ang    = fix16_sadd(pPlayer->q16ang, input.q16avel) & 0x7FFFFFF;
+        localInput.q16avel = fix16_sadd(localInput.q16avel, input.q16avel);
 
+        input.q16horz = VM_OnEventWithReturn(EVENT_PLAYERHORZ,g_player[playerNum].ps->i,playerNum,input.q16horz);
         if (!(movementLocked & IL_NOHORIZ))
         {
             horizAngle        = atan2f(pPlayer->q16horiz - F16(100), F16(128)) * (512.f / fPI) + fix16_to_float(input.q16horz);
             pPlayer->q16horiz = F16(100) + Blrintf(F16(128) * tanf(horizAngle * (fPI / 512.f)));
         }
+        horizAngle = atan2f(localInput.q16horz, F16(128)) * (512.f / fPI) + fix16_to_float(input.q16horz);
+        localInput.q16horz = fix16_clamp(Blrintf(F16(128) * tanf(horizAngle * (fPI / 512.f))), F16(-MAXHORIZVEL), F16(MAXHORIZVEL));
 
         localInput.fvel = clamp(localInput.fvel + input.fvel, -MAXVEL, MAXVEL);
         localInput.svel = clamp(localInput.svel + input.svel, -MAXSVEL, MAXSVEL);
-
-        horizAngle = atan2f(localInput.q16horz, F16(128)) * (512.f / fPI) + fix16_to_float(input.q16horz);
-        localInput.q16horz = fix16_clamp(Blrintf(F16(128) * tanf(horizAngle * (fPI / 512.f))), F16(-MAXHORIZVEL), F16(MAXHORIZVEL));
-        
-        localInput.q16avel = fix16_sadd(localInput.q16avel, input.q16avel);
     }
 
     // A horiz diff of 128 equal 45 degrees, so we convert horiz to 1024 angle units
